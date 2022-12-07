@@ -35,7 +35,8 @@ import {
   AnyState,
   StateConfig,
   InteropSubscribable,
-  RaiseActionObject
+  RaiseActionObject,
+  LogActionObject
 } from './types';
 import { State, bindActionToState, isStateConfig } from './State';
 import * as actionTypes from './actionTypes';
@@ -960,7 +961,7 @@ export class Interpreter<
       | RaiseActionObject<TContext, TEvent>
   ): void {
     const timerId = this.clock.setTimeout(() => {
-      if (sendAction.to) {
+      if ('to' in sendAction && sendAction.to) {
         this.sendTo(sendAction._event, sendAction.to, true);
       } else {
         this.send(
@@ -1145,7 +1146,7 @@ export class Interpreter<
       }
 
       case actionTypes.log:
-        const { label, value } = action;
+        const { label, value } = action as LogActionObject<TContext, TEvent>;
 
         if (label) {
           this.logger(label, value);

@@ -127,14 +127,12 @@ describeEachReactMode('useActor (%s)', ({ render }) => {
     });
 
     interface Ctx {
-      actorRef?: ActorRefFrom<typeof childMachine>;
+      actorRef: ActorRefFrom<typeof childMachine>;
     }
 
     const machine = createMachine<Ctx>({
       initial: 'active',
-      context: {
-        actorRef: undefined
-      },
+      context: {} as Ctx,
       states: {
         active: {
           entry: assign({
@@ -179,12 +177,12 @@ describeEachReactMode('useActor (%s)', ({ render }) => {
       }
     });
     const machine = createMachine<{
-      actorRef?: ActorRefFrom<typeof childMachine>;
+      actorRef: ActorRefFrom<typeof childMachine>;
     }>({
       initial: 'active',
       context: {
         actorRef: undefined
-      },
+      } as any,
       states: {
         active: {
           entry: assign({
