@@ -161,7 +161,6 @@ export class StateMachine<
             partialContext
           ) as TContext;
         }; // TODO: fix types
-    this.preInitialState = options?.state;
     this.delimiter = this.config.delimiter || STATE_DELIMITER;
     this.version = this.config.version;
     this.schema = this.config.schema ?? (({} as any) as this['schema']);
@@ -210,8 +209,7 @@ export class StateMachine<
       guards: { ...guards, ...implementations.guards },
       actors: { ...actors, ...implementations.actors },
       delays: { ...delays, ...implementations.delays },
-      context: implementations.context!,
-      state: this.preInitialState
+      context: implementations.context!
     });
   }
 
@@ -460,21 +458,19 @@ export class StateMachine<
     return resolvedState as State<TContext, TEvent, TResolvedTypesMeta>;
   }
 
-  /**
-   * Creates a new machine from this machine where the initial state is at the specified `state`.
-   *
-   * @param state The state to resolve the initial state from
-   */
-  public at(
-    state?:
-      | State<TContext, TEvent, TResolvedTypesMeta>
-      | PersistedMachineState<State<TContext, TEvent, TResolvedTypesMeta>>
-  ): this {
-    if (!state) {
-      return this;
-    }
+  public getStatus(state: State<TContext, TEvent, TResolvedTypesMeta>) {
+    return state.done
+      ? { status: 'done', data: state.output }
+      : { status: 'active' };
+  }
 
-    const machine = new StateMachine(this.config) as typeof this;
+  public restoreState(
+    state: State<TContext, TEvent, TResolvedTypesMeta>,
+    _actorCtx?: ActorContext<
+      TEvent,
+      State<TContext, TEvent, TResolvedTypesMeta>
+    >
+  ): State<TContext, TEvent, TResolvedTypesMeta> {
     let restoredState: State<TContext, TEvent, TResolvedTypesMeta>;
 
     if ('persisted' in state) {
@@ -523,25 +519,7 @@ export class StateMachine<
       restoredState = this.createState(state);
     }
 
-    machine.preInitialState = restoredState;
-
-    return machine;
-  }
-
-  public getStatus(state: State<TContext, TEvent, TResolvedTypesMeta>) {
-    return state.done
-      ? { status: 'done', data: state.output }
-      : { status: 'active' };
-  }
-
-  public restoreState(
-    state: State<TContext, TEvent, TResolvedTypesMeta>,
-    _actorCtx?: ActorContext<
-      TEvent,
-      State<TContext, TEvent, TResolvedTypesMeta>
-    >
-  ): State<TContext, TEvent, TResolvedTypesMeta> {
-    return this.at(state).getInitialState(_actorCtx);
+    return restoredState;
   }
 
   /**@deprecated an internal property acting as a "phantom" type, not meant to be used at runtime */
