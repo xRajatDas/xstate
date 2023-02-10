@@ -176,7 +176,7 @@ export type BaseAction<
   | StopAction<TContext, TExpressionEvent>
   | ChooseAction<TContext, TExpressionEvent>
   | PureAction<TContext, TExpressionEvent>
-  | ActionFunction<TContext, TExpressionEvent>;
+  | ActionFunction<TContext, TExpressionEvent, TAction, TEvent>;
 
 export type BaseActions<
   TContext,
@@ -816,12 +816,14 @@ type MachineOptionsActions<
     | ActionObject<
         TContext,
         Cast<Prop<TIndexedEvents, TEventsCausingActions[K]>, EventObject>,
+        Cast<Prop<TIndexedEvents, keyof TIndexedEvents>, EventObject>,
         Cast<Prop<TIndexedActions, K>, BaseActionObject>
       >
     | ActionFunction<
         TContext,
         Cast<Prop<TIndexedEvents, TEventsCausingActions[K]>, EventObject>,
-        Cast<Prop<TIndexedActions, K>, BaseActionObject>
+        Cast<Prop<TIndexedActions, K>, BaseActionObject>,
+        Cast<Prop<TIndexedEvents, keyof TIndexedEvents>, EventObject>
       >;
 };
 
