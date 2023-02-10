@@ -355,11 +355,9 @@ export function sendTo<
 export function sendUpdate<TContext, TEvent extends EventObject>(): SendAction<
   TContext,
   TEvent,
-  { type: ActionTypes.Update }
+  AnyEventObject
 > {
-  return sendParent<TContext, TEvent, { type: ActionTypes.Update }>(
-    actionTypes.update
-  );
+  return sendParent(actionTypes.update);
 }
 
 /**
