@@ -63,6 +63,7 @@ export interface BaseActionObject {
   [other: string]: any;
   /** @deprecated don't use this property, it doesn't exist at runtime */
   _builtin?: never;
+  [notAnArrayLike: number]: never;
 }
 
 /**
@@ -72,7 +73,8 @@ export interface BaseActionObject {
 export interface ActionObject<
   TContext,
   TExpressionEvent extends EventObject,
-  TEvent extends EventObject = TExpressionEvent
+  TEvent extends EventObject = TExpressionEvent,
+  TAction extends BaseActionObject = BaseActionObject
 > {
   type: string;
   /** @deprecated don't use this property, it doesn't exist at runtime */
@@ -83,6 +85,13 @@ export interface ActionObject<
   exec?:
     | ActionFunction<TContext, TExpressionEvent, BaseActionObject, TEvent>
     | undefined;
+
+  /** @deprecated an internal signature that doesn't exist at runtime. Its existence helps TS to choose a better code path in the inference algorithm  */
+  (
+    arg: TContext,
+    ev: TExpressionEvent,
+    meta: ActionMeta<TContext, TEvent, TAction>
+  ): void;
   [other: string]: any;
 }
 
@@ -134,6 +143,7 @@ export type Action<
   TEvent extends EventObject = TExpressionEvent
 > =
   | ActionType
+  | BaseActionObject
   | ActionObject<TContext, TExpressionEvent, TEvent>
   | ActionFunction<TContext, TExpressionEvent, BaseActionObject, TEvent>;
 
@@ -161,17 +171,17 @@ export type BaseAction<
 > =
   | SimpleActionsOf<TAction>['type']
   | TAction
-  | CancelAction
   | RaiseAction<TContext, TExpressionEvent, TEvent>
   | SendAction<TContext, TExpressionEvent, any>
   | AssignAction<TContext, TExpressionEvent, TEvent>
   // TODO: those might need to receive `TEvent` as well
   // it might be required to type the ActionMeta in them properly
   | LogAction<TContext, TExpressionEvent>
+  | CancelAction<TContext, TExpressionEvent>
   | StopAction<TContext, TExpressionEvent>
   | ChooseAction<TContext, TExpressionEvent>
-  | ActionFunction<TContext, TExpressionEvent>
-  | PureAction<TContext, TExpressionEvent>;
+  | PureAction<TContext, TExpressionEvent>
+  | ActionFunction<TContext, TExpressionEvent>;
 
 export type BaseActions<
   TContext,
@@ -810,7 +820,8 @@ type MachineOptionsActions<
   [K in keyof TEventsCausingActions]?:
     | ActionObject<
         TContext,
-        Cast<Prop<TIndexedEvents, TEventsCausingActions[K]>, EventObject>
+        Cast<Prop<TIndexedEvents, TEventsCausingActions[K]>, EventObject>,
+        Cast<Prop<TIndexedActions, K>, BaseActionObject>
       >
     | ActionFunction<
         TContext,
@@ -1210,8 +1221,11 @@ export interface RaiseAction<
   id: string | number | undefined;
 }
 
-export interface RaiseActionObject<TContext, TEvent extends EventObject>
-  extends Omit<RaiseAction<TContext, TEvent>, 'event'> {
+export interface RaiseActionObject<
+  TContext,
+  TExpressionEvent extends EventObject,
+  TEvent extends EventObject = TExpressionEvent
+> extends RaiseAction<TContext, TExpressionEvent, TEvent> {
   type: ActionTypes.Raise;
   _event: SCXML.Event<TEvent>;
   delay: number | undefined;
@@ -1274,6 +1288,7 @@ export type LogExpr<TContext, TEvent extends EventObject> = ExprWithMeta<
 
 export interface LogAction<TContext, TEvent extends EventObject>
   extends ActionObject<TContext, TEvent> {
+  type: ActionTypes.Log;
   label: string | undefined;
   expr: string | LogExpr<TContext, TEvent>;
 }
@@ -1361,7 +1376,9 @@ export interface RaiseActionOptions<TContext, TEvent extends EventObject> {
   delay?: number | string | DelayExpr<TContext, TEvent>;
 }
 
-export interface CancelAction extends ActionObject<any, any> {
+export interface CancelAction<TContext, TEvent extends EventObject>
+  extends ActionObject<TContext, TEvent> {
+  type: ActionTypes.Cancel;
   sendId: string | number;
 }
 
