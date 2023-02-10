@@ -231,13 +231,13 @@ export function send<
   TEvent extends EventObject,
   TSentEvent extends EventObject = AnyEventObject
 >(
-  event: Event<TSentEvent> | SendExpr<TContext, TEvent, TSentEvent>,
+  event: Event<AnyEventObject> | SendExpr<TContext, TEvent, AnyEventObject>,
   options?: SendActionOptions<TContext, TEvent>
 ): SendAction<TContext, TEvent, TSentEvent> {
   return {
     to: options ? options.to : undefined,
     type: actionTypes.send,
-    event: isFunction(event) ? event : toEventObject<TSentEvent>(event),
+    event: isFunction(event) ? event : toEventObject(event),
     delay: options ? options.delay : undefined,
     // TODO: don't auto-generate IDs here like that
     // there is too big chance of the ID collision
@@ -246,7 +246,7 @@ export function send<
         ? options.id
         : isFunction(event)
         ? event.name
-        : (getEventType<TSentEvent>(event) as string)
+        : (getEventType(event) as string)
   } as any;
 }
 
@@ -307,7 +307,7 @@ export function sendParent<
   TEvent extends EventObject,
   TSentEvent extends EventObject = AnyEventObject
 >(
-  event: Event<TSentEvent> | SendExpr<TContext, TEvent, TSentEvent>,
+  event: Event<AnyEventObject> | SendExpr<TContext, TEvent, AnyEventObject>,
   options?: SendActionOptions<TContext, TEvent>
 ): SendAction<TContext, TEvent, TSentEvent> {
   return send<TContext, TEvent, TSentEvent>(event, {
