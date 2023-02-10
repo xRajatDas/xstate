@@ -61,8 +61,6 @@ export interface BaseActionObject {
    */
   type: string;
   [other: string]: any;
-  /** @deprecated don't use this property, it doesn't exist at runtime */
-  _builtin?: never;
   [notAnArrayLike: number]: never;
 }
 
@@ -77,8 +75,6 @@ export interface ActionObject<
   TAction extends BaseActionObject = BaseActionObject
 > {
   type: string;
-  /** @deprecated don't use this property, it doesn't exist at runtime */
-  readonly _builtin?: unique symbol;
   /**
    * The implementation for executing the action.
    */
@@ -92,7 +88,6 @@ export interface ActionObject<
     ev: TExpressionEvent,
     meta: ActionMeta<TContext, TEvent, TAction>
   ): void;
-  [other: string]: any;
 }
 
 export type DefaultContext = Record<string, any> | undefined;
